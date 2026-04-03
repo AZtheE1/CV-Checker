@@ -1,0 +1,7 @@
+target/
+.vscode/
+uploads/
+*.class
+*.log
+config.properties
+dependency-reduced-pom.xml
