@@ -65,16 +65,16 @@ public class UserService {
     }
 
     /**
-     * Registers a new user.
+     * Registers a new user with mandatory profile details.
      */
-    public boolean register(String username, String password, String email, String role) {
+    public boolean register(String username, String password, String email, String role, String firstName, String lastName) {
         String hash = BCrypt.hashpw(password, BCrypt.gensalt());
         // Generate a new TOTP secret for the user
         byte[] buffer = new byte[10];
         new java.util.Random().nextBytes(buffer);
         String totpSecret = new Base32().encodeAsString(buffer);
 
-        String sql = "INSERT INTO " + Constants.TABLE_USERS + " (username, password_hash, email, role, totp_secret) VALUES (?, ?, ?, ?, ?)";
+        String sql = "INSERT INTO " + Constants.TABLE_USERS + " (username, password_hash, email, role, totp_secret, first_name, last_name) VALUES (?, ?, ?, ?, ?, ?, ?)";
         try (Connection conn = DBConnection.getConnection();
              PreparedStatement pstmt = conn.prepareStatement(sql)) {
             
@@ -83,6 +83,8 @@ public class UserService {
             pstmt.setString(3, email);
             pstmt.setString(4, role != null ? role : Constants.ROLE_USER);
             pstmt.setString(5, totpSecret);
+            pstmt.setString(6, firstName);
+            pstmt.setString(7, lastName);
             
             int affected = pstmt.executeUpdate();
             if (affected > 0) {

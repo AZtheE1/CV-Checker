@@ -50,7 +50,8 @@ public class CVUploadPanel extends JPanel {
         title.setForeground(UITheme.PRIMARY_COLOR);
 
         titleField = createTextField();
-        jobTitleBox = new JComboBox<>(new String[]{"Java Developer", "Frontend Developer", "Data Scientist", "Project Manager"}); // Placeholder, should be from DB
+        jobTitleBox = new JComboBox<>();
+        CVManager.getJobTitles().forEach(jobTitleBox::addItem);
         jobTitleBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
         descriptionArea = new JTextArea(3, 20);

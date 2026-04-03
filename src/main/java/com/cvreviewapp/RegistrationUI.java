@@ -23,6 +23,8 @@ public class RegistrationUI extends JFrame {
     private final UserService userService = new UserService();
 
     private JTextField usernameField;
+    private JTextField firstNameField;
+    private JTextField lastNameField;
     private JPasswordField passwordField;
     private JTextField emailField;
     private JComboBox<String> roleBox;
@@ -37,7 +39,7 @@ public class RegistrationUI extends JFrame {
     private void initUI() {
         setTitle(Constants.app.name + " - Registration");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setSize(500, 650);
+        setSize(500, 750); // Increased height for new fields
         setLocationRelativeTo(null);
         setResizable(false);
 
@@ -52,6 +54,8 @@ public class RegistrationUI extends JFrame {
         titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
         usernameField = createTextField();
+        firstNameField = createTextField();
+        lastNameField = createTextField();
         passwordField = createPasswordField();
         emailField = createTextField();
         roleBox = new JComboBox<>(new String[]{Constants.ROLE_USER, Constants.ROLE_ADMIN});
@@ -93,6 +97,8 @@ public class RegistrationUI extends JFrame {
         mainPanel.add(Box.createVerticalStrut(30));
         
         addFormField(mainPanel, "Username", usernameField);
+        addFormField(mainPanel, "First Name", firstNameField);
+        addFormField(mainPanel, "Last Name", lastNameField);
         addFormField(mainPanel, "Email", emailField);
         addFormField(mainPanel, "Password", passwordField);
         addFormField(mainPanel, "Role", roleBox);
@@ -136,11 +142,13 @@ public class RegistrationUI extends JFrame {
 
     private void handleRegister() {
         String username = usernameField.getText().trim();
+        String firstName = firstNameField.getText().trim();
+        String lastName = lastNameField.getText().trim();
         String email = emailField.getText().trim();
         String password = new String(passwordField.getPassword());
         String role = (String) roleBox.getSelectedItem();
 
-        if (!validateInput(username, email, password)) return;
+        if (!validateInput(username, email, password, firstName, lastName)) return;
 
         setLoading(true);
         SwingWorker<Boolean, Void> worker = new SwingWorker<>() {
@@ -150,8 +158,51 @@ public class RegistrationUI extends JFrame {
                     SwingUtilities.invokeLater(() -> statusLabel.setText("Username already exists."));
                     return false;
                 }
-                return userService.register(username, password, email, role);
+                return userService.register(username, password, email, role, firstName, lastName);
             }
+
+            @Override
+            protected void done() {
+                try {
+                    if (get()) {
+                        JOptionPane.showMessageDialog(RegistrationUI.this, 
+                            "Registration successful! Please log in.\nNote: TOTP protection is now active.", 
+                            "Success", JOptionPane.INFORMATION_MESSAGE);
+                        new LoginUI();
+                        dispose();
+                    }
+                } catch (Exception e) {
+                    LOGGER.severe("Registration failed: " + e.getMessage());
+                    statusLabel.setText(Constants.MESSAGE_ERROR_UNEXPECTED);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+        worker.execute();
+    }
+
+    private boolean validateInput(String user, String email, String pass, String first, String last) {
+        boolean valid = true;
+        
+        if (user.length() < 3) { usernameField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1)); valid = false; }
+        else usernameField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+
+        if (first.isEmpty()) { firstNameField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1)); valid = false; }
+        else firstNameField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+
+        if (last.isEmpty()) { lastNameField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1)); valid = false; }
+        else lastNameField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+
+        if (!EMAIL_PATTERN.matcher(email).matches()) { emailField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1)); valid = false; }
+        else emailField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+
+        if (pass.length() < 6) { passwordField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1)); valid = false; }
+        else passwordField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+
+        if (!valid) statusLabel.setText("Please fix the highlighted fields.");
+        return valid;
+    }
 
             @Override
             protected void done() {

@@ -16,12 +16,43 @@ public class DatabaseInitializer {
             
             // Insert default data
             insertDefaultData(conn);
+            insertDefaultJobRequirements(conn);
             
             LOGGER.info("Database initialization completed successfully!");
             
         } catch (SQLException e) {
             LOGGER.log(Level.SEVERE, "Database initialization failed", e);
             throw new RuntimeException("Failed to initialize database", e);
+        }
+    }
+
+    private static void insertDefaultJobRequirements(Connection conn) throws SQLException {
+        LOGGER.info("Inserting default job requirements...");
+        String sql = "INSERT INTO job_requirements (job_title, category, requirements) VALUES (?, ?, ?) ON DUPLICATE KEY UPDATE requirements = VALUES(requirements)";
+        try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            String[][] jobs = {
+                {"Java Developer", "skills", "Java, Spring Boot, Hibernate, REST APIs, OOP, Maven"},
+                {"Java Developer", "qualification", "Bachelor's Degree in Computer Science"},
+                {"Java Developer", "experience", "2+ years"},
+                
+                {"Frontend Developer", "skills", "HTML, CSS, JavaScript, React, Responsive Design"},
+                {"Frontend Developer", "qualification", "Bachelor's in IT or related field"},
+                {"Frontend Developer", "experience", "1+ year"},
+                
+                {"Data Scientist", "skills", "Python, Machine Learning, Pandas, TensorFlow, Data Wrangling"},
+                {"Data Scientist", "qualification", "Master's in Data Science or related"},
+                {"Data Scientist", "experience", "3+ years"},
+
+                {"Project Manager", "skills", "Agile, Scrum, JIRA, Communication, Leadership"},
+                {"Project Manager", "qualification", "Bachelor's in Business or IT + PMP Certification"},
+                {"Project Manager", "experience", "3+ years"}
+            };
+            for (String[] job : jobs) {
+                pstmt.setString(1, job[0]);
+                pstmt.setString(2, job[1]);
+                pstmt.setString(3, job[2]);
+                pstmt.executeUpdate();
+            }
         }
     }
     
@@ -45,7 +76,7 @@ public class DatabaseInitializer {
                 is_active BOOLEAN DEFAULT TRUE,
                 last_login TIMESTAMP NULL,
                 two_factor_enabled BOOLEAN DEFAULT FALSE,
-                two_factor_secret VARCHAR(255) NULL
+                totp_secret VARCHAR(255) NULL
             )
         """;
         
@@ -61,6 +92,7 @@ public class DatabaseInitializer {
                 file_size BIGINT NOT NULL,
                 file_type VARCHAR(50) NOT NULL,
                 status ENUM('PENDING', 'UNDER_REVIEW', 'APPROVED', 'REJECTED', 'ARCHIVED') DEFAULT 'PENDING',
+                job_title VARCHAR(100) NULL,
                 submission_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                 updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
                 reviewer_id INT NULL,
@@ -71,7 +103,18 @@ public class DatabaseInitializer {
             )
         """;
         
-        // Review criteria table
+        // Dynamic Job Requirements table
+        String createJobRequirementsTable = """
+            CREATE TABLE IF NOT EXISTS job_requirements (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                job_title VARCHAR(100) NOT NULL,
+                category VARCHAR(50) NOT NULL,
+                requirements TEXT NOT NULL,
+                UNIQUE KEY unique_title_category (job_title, category)
+            )
+        """;
+        
+        // Review criteria table (remains for scoring metrics)
         String createReviewCriteriaTable = """
             CREATE TABLE IF NOT EXISTS review_criteria (
                 id INT AUTO_INCREMENT PRIMARY KEY,
@@ -102,63 +145,27 @@ public class DatabaseInitializer {
             )
         """;
         
-        // Review sessions table
-        String createReviewSessionsTable = """
-            CREATE TABLE IF NOT EXISTS review_sessions (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                cv_submission_id INT NOT NULL,
-                reviewer_id INT NOT NULL,
-                overall_score DECIMAL(5,2),
-                overall_comments TEXT,
-                review_status ENUM('IN_PROGRESS', 'COMPLETED', 'CANCELLED') DEFAULT 'IN_PROGRESS',
-                started_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                completed_at TIMESTAMP NULL,
-                FOREIGN KEY (cv_submission_id) REFERENCES cv_submissions(id) ON DELETE CASCADE,
-                FOREIGN KEY (reviewer_id) REFERENCES users(id) ON DELETE CASCADE,
-                UNIQUE KEY unique_session (cv_submission_id, reviewer_id)
-            )
-        """;
-        
-        // User sessions table
-        String createUserSessionsTable = """
-            CREATE TABLE IF NOT EXISTS user_sessions (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NOT NULL,
-                session_token VARCHAR(255) UNIQUE NOT NULL,
-                ip_address VARCHAR(45),
-                user_agent TEXT,
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                expires_at TIMESTAMP NOT NULL,
-                is_active BOOLEAN DEFAULT TRUE,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
-            )
-        """;
-        
-        // System logs table
-        String createSystemLogsTable = """
-            CREATE TABLE IF NOT EXISTS system_logs (
-                id INT AUTO_INCREMENT PRIMARY KEY,
-                user_id INT NULL,
-                action VARCHAR(100) NOT NULL,
-                details TEXT,
-                ip_address VARCHAR(45),
-                user_agent TEXT,
-                log_level ENUM('INFO', 'WARNING', 'ERROR', 'DEBUG') DEFAULT 'INFO',
-                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE SET NULL
-            )
-        """;
-        
         // Execute table creation
         try (Statement stmt = conn.createStatement()) {
             stmt.execute(createUsersTable);
             stmt.execute(createCVSubmissionsTable);
+            stmt.execute(createJobRequirementsTable);
             stmt.execute(createReviewCriteriaTable);
             stmt.execute(createCVReviewsTable);
-            stmt.execute(createReviewSessionsTable);
-            stmt.execute(createUserSessionsTable);
-            stmt.execute(createSystemLogsTable);
         }
+        
+        // Alter existing tables if necessary (migration support)
+        try (Statement stmt = conn.createStatement()) {
+            // Check for totp_secret column
+            try { stmt.execute("ALTER TABLE users CHANGE COLUMN two_factor_secret totp_secret VARCHAR(255)"); } catch (Exception e) { /* already exists or column missing */ }
+            // Check for job_title column
+            try { stmt.execute("ALTER TABLE cv_submissions ADD COLUMN job_title VARCHAR(100) NULL AFTER status"); } catch (Exception e) { /* already exists */ }
+        }
+
+        // Create indexes
+        createIndexes(conn);
+        LOGGER.info("All tables created successfully!");
+    }
         
         // Create indexes
         createIndexes(conn);

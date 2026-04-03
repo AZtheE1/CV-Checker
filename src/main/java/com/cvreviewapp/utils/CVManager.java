@@ -92,6 +92,24 @@ public class CVManager {
     }
 
     /**
+     * Fetches all unique job titles from the requirements database.
+     */
+    public static List<String> getJobTitles() {
+        List<String> titles = new ArrayList<>();
+        String sql = "SELECT DISTINCT job_title FROM job_requirements ORDER BY job_title ASC";
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                titles.add(rs.getString("job_title"));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Failed to fetch job titles from DB", e);
+        }
+        return titles;
+    }
+
+    /**
      * Logs actions securely using PreparedStatement.
      */
     public static void logAction(Integer userId, String action, String details) {
