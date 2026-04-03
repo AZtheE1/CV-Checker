@@ -33,4 +33,8 @@ public final class UITheme {
     public static final EmptyBorder MAIN_PADDING = new EmptyBorder(20, 20, 20, 20);
     public static final int COMPONENT_SPACING = 10;
     public static final int BORDER_RADIUS = 8;
+
+    public static void setupGlobalStyles() {
+        // Global Swing UI configuration can be added here
+    }
 }

@@ -8,6 +8,7 @@ import com.cvreviewapp.utils.Constants;
 import com.cvreviewapp.utils.UITheme;
 import java.awt.*;
 import java.io.File;
+import java.util.Optional;
 import java.util.logging.Logger;
 import javax.swing.*;
 import javax.swing.border.LineBorder;
@@ -118,16 +119,16 @@ public class CVUploadPanel extends JPanel {
         }
 
         setLoading(true);
-        SwingWorker<Submission, Void> worker = new SwingWorker<>() {
+        SwingWorker<Optional<Submission>, Void> worker = new SwingWorker<>() {
             @Override
-            protected Submission doInBackground() throws Exception {
+            protected Optional<Submission> doInBackground() throws Exception {
                 return submissionService.submitCV(user, selectedFile, title, descriptionArea.getText(), jobTitle);
             }
 
             @Override
             protected void done() {
                 try {
-                    Submission s = get();
+                    Submission s = get().orElse(null);
                     if (s != null) {
                         CVManager.logAction(user.id(), "CV_UPLOAD", "Uploaded CV: " + title);
                         showAnalysisResult(s, jobTitle);

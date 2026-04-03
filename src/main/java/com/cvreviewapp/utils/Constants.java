@@ -8,6 +8,10 @@ package com.cvreviewapp.utils;
  * GitHub: AZtheE1
  */
 public final class Constants {
+    public static final class app {
+        public static final String name = "CV-Handler";
+    }
+
     private Constants() {}
 
     // Roles

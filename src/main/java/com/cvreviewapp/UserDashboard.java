@@ -118,7 +118,7 @@ public class UserDashboard extends JFrame {
         SwingWorker<List<Submission>, Void> worker = new SwingWorker<>() {
             @Override
             protected List<Submission> doInBackground() {
-                return submissionService.getUserSubmissions(user);
+                return submissionService.getUserSubmissions(user.id());
             }
 
             @Override

@@ -14,6 +14,7 @@ import java.nio.file.StandardCopyOption;
 import java.sql.*;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -43,7 +44,7 @@ public class SubmissionService {
     /**
      * Stored CV file and save metadata to database.
      */
-    public Optional<Submission> uploadCV(File file, User user, String title, String description, String jobTitle) {
+    public Optional<Submission> submitCV(User user, File file, String title, String description, String jobTitle) {
         // Path Traversal Security: Ensure the destination is within the upload root
         String safeName = UUID.randomUUID().toString() + ".pdf";
         Path destPath = uploadRoot.resolve(safeName).normalize();
@@ -62,6 +63,34 @@ public class SubmissionService {
             LOGGER.log(Level.SEVERE, "Failed to store uploaded file: " + file.getName(), e);
         }
         return Optional.empty();
+    }
+
+    public List<Submission> getAllSubmissions() {
+        String sql = "SELECT * FROM " + Constants.TABLE_SUBMISSIONS + " ORDER BY submission_date DESC";
+        List<Submission> list = new ArrayList<>();
+        try (Connection conn = DBConnection.getConnection();
+             Statement stmt = conn.createStatement();
+             ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                list.add(mapResultSetToSubmission(rs));
+            }
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error fetching all submissions", e);
+        }
+        return list;
+    }
+
+    public boolean updateStatus(int submissionId, String status) {
+        String sql = "UPDATE " + Constants.TABLE_SUBMISSIONS + " SET status = ? WHERE id = ?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement pstmt = conn.prepareStatement(sql)) {
+            pstmt.setString(1, status);
+            pstmt.setInt(2, submissionId);
+            return pstmt.executeUpdate() > 0;
+        } catch (SQLException e) {
+            LOGGER.log(Level.SEVERE, "Error updating status for CV: " + submissionId, e);
+            return false;
+        }
     }
 
     private int saveMetadata(int userId, String title, String description, String filePath, String fileName, long fileSize, String jobTitle) {

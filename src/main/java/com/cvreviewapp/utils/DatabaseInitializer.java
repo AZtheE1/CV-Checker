@@ -166,12 +166,6 @@ public class DatabaseInitializer {
         createIndexes(conn);
         LOGGER.info("All tables created successfully!");
     }
-        
-        // Create indexes
-        createIndexes(conn);
-        
-        LOGGER.info("All tables created successfully!");
-    }
     
     private static void createIndexes(Connection conn) throws SQLException {
         LOGGER.info("Creating database indexes...");

@@ -204,48 +204,6 @@ public class RegistrationUI extends JFrame {
         return valid;
     }
 
-            @Override
-            protected void done() {
-                try {
-                    if (get()) {
-                        JOptionPane.showMessageDialog(RegistrationUI.this, 
-                            "Registration successful! Please log in.\nNote: TOTP protection is now active.", 
-                            "Success", JOptionPane.INFORMATION_MESSAGE);
-                        new LoginUI();
-                        dispose();
-                    }
-                } catch (Exception e) {
-                    LOGGER.severe("Registration failed: " + e.getMessage());
-                    statusLabel.setText(Constants.MESSAGE_ERROR_UNEXPECTED);
-                } finally {
-                    setLoading(false);
-                }
-            }
-        };
-        worker.execute();
-    }
-
-    private boolean validateInput(String user, String email, String pass) {
-        boolean valid = true;
-        if (user.length() < 3) {
-            usernameField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1));
-            valid = false;
-        } else usernameField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
-
-        if (!EMAIL_PATTERN.matcher(email).matches()) {
-            emailField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1));
-            valid = false;
-        } else emailField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
-
-        if (pass.length() < 6) {
-            passwordField.setBorder(new LineBorder(UITheme.ERROR_COLOR, 1));
-            valid = false;
-        } else passwordField.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
-
-        if (!valid) statusLabel.setText("Please fix the highlighted fields.");
-        return valid;
-    }
-
     private void setLoading(boolean loading) {
         progressBar.setVisible(loading);
         registerButton.setEnabled(!loading);
