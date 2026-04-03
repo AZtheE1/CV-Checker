@@ -1,231 +1,170 @@
 package com.cvreviewapp;
 
-import java.awt.AlphaComposite;
-import java.awt.Color;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Insets;
-import java.awt.event.ActionEvent;
-import java.io.File;
-
-import javax.swing.BorderFactory;
-import javax.swing.JButton;
-import javax.swing.JComboBox;
-import javax.swing.JFileChooser;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.JScrollPane;
-import javax.swing.JTextArea;
-import javax.swing.JTextField;
-import javax.swing.SwingUtilities;
-
 import com.cvreviewapp.models.Submission;
 import com.cvreviewapp.models.User;
+import com.cvreviewapp.services.SubmissionService;
 import com.cvreviewapp.utils.CVManager;
+import com.cvreviewapp.utils.Constants;
+import com.cvreviewapp.utils.UITheme;
+import java.awt.*;
+import java.io.File;
+import java.util.logging.Logger;
+import javax.swing.*;
+import javax.swing.border.LineBorder;
 
+/**
+ * Production-ready CV Upload Component with async processing and live feedback.
+ * 
+ * Developed by: azihad
+ * Contact: azihad783@gmail.com
+ * GitHub: AZtheE1
+ */
 public class CVUploadPanel extends JPanel {
+    private static final Logger LOGGER = Logger.getLogger(CVUploadPanel.class.getName());
+    private final SubmissionService submissionService = new SubmissionService();
+    private final User user;
+
     private JTextField titleField;
-    private JTextArea descriptionArea;
-    private JTextField fileField;
-    private JButton browseButton;
-    private JButton uploadButton;
-    private JLabel feedbackLabel;
-    private File selectedFile;
-    private User user;
     private JComboBox<String> jobTitleBox;
+    private JTextArea descriptionArea;
+    private JLabel fileLabel;
+    private JProgressBar progressBar;
+    private JButton uploadButton;
+    private File selectedFile;
 
     public CVUploadPanel(User user) {
         this.user = user;
-        setOpaque(false);
-        setLayout(new GridBagLayout());
-        setBorder(BorderFactory.createEmptyBorder(32, 32, 32, 32));
+        initUI();
+    }
 
-        JPanel card = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, 0.85f));
-                g2.setColor(Color.WHITE);
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 32, 32);
-                g2.dispose();
-            }
-        };
-        card.setOpaque(false);
-        card.setLayout(new GridBagLayout());
-        card.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(220, 220, 220), 1, true),
-                BorderFactory.createEmptyBorder(24, 24, 24, 24)
+    private void initUI() {
+        setLayout(new BoxLayout(this, BoxLayout.Y_AXIS));
+        setBackground(Color.WHITE);
+        setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(UITheme.SECONDARY_COLOR, 1),
+            BorderFactory.createEmptyBorder(20, 20, 20, 20)
         ));
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.gridwidth = 2;
+        JLabel title = new JLabel("Submit New CV");
+        title.setFont(UITheme.HEADER_FONT);
+        title.setForeground(UITheme.PRIMARY_COLOR);
 
-        JLabel titleLabel = new JLabel("Upload Your CV");
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 26));
-        card.add(titleLabel, gbc);
+        titleField = createTextField();
+        jobTitleBox = new JComboBox<>(new String[]{"Java Developer", "Frontend Developer", "Data Scientist", "Project Manager"}); // Placeholder, should be from DB
+        jobTitleBox.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
 
-        gbc.gridy++;
-        gbc.gridwidth = 1;
-        JLabel fileLabel = new JLabel("PDF File:");
-        fileLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        card.add(fileLabel, gbc);
-
-        gbc.gridx = 1;
-        fileField = new JTextField(18);
-        fileField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        fileField.setEditable(false);
-        card.add(fileField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        browseButton = new JButton("Browse");
-        browseButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        browseButton.setToolTipText("Select a PDF file to upload");
-        card.add(browseButton, gbc);
-
-        gbc.gridx = 1;
-        uploadButton = new JButton("Upload");
-        uploadButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
-        uploadButton.setToolTipText("Upload the selected CV");
-        uploadButton.setEnabled(false);
-        card.add(uploadButton, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        JLabel titleLbl = new JLabel("Title:");
-        titleLbl.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        card.add(titleLbl, gbc);
-
-        gbc.gridx = 1;
-        titleField = new JTextField(18);
-        titleField.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        card.add(titleField, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        JLabel jobTitleLbl = new JLabel("Job Title:");
-        jobTitleLbl.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        card.add(jobTitleLbl, gbc);
-
-        gbc.gridx = 1;
-        jobTitleBox = new JComboBox<>();
-        for (com.cvreviewapp.utils.CVManager.JobRequirement req : com.cvreviewapp.utils.CVManager.JOB_REQUIREMENTS) {
-            jobTitleBox.addItem(req.jobTitle);
-        }
-        jobTitleBox.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        card.add(jobTitleBox, gbc);
-
-        gbc.gridx = 0;
-        gbc.gridy++;
-        JLabel descLbl = new JLabel("Description:");
-        descLbl.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        card.add(descLbl, gbc);
-
-        gbc.gridx = 1;
-        descriptionArea = new JTextArea(3, 18);
-        descriptionArea.setFont(new Font("Segoe UI", Font.PLAIN, 16));
+        descriptionArea = new JTextArea(3, 20);
+        descriptionArea.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
         descriptionArea.setLineWrap(true);
-        descriptionArea.setWrapStyleWord(true);
-        JScrollPane descScroll = new JScrollPane(descriptionArea);
-        card.add(descScroll, gbc);
 
-        gbc.gridx = 0;
-        gbc.gridy++;
-        gbc.gridwidth = 2;
-        feedbackLabel = new JLabel(" ");
-        feedbackLabel.setFont(new Font("Segoe UI", Font.ITALIC, 15));
-        feedbackLabel.setForeground(new Color(60, 120, 60));
-        card.add(feedbackLabel, gbc);
+        fileLabel = new JLabel("No file selected");
+        fileLabel.setFont(UITheme.SMALL_FONT);
 
-        // Add card to main panel
-        add(card);
+        JButton browseButton = new JButton("Select PDF");
+        browseButton.addActionListener(e -> selectFile());
 
-        // Actions
-        browseButton.addActionListener(this::onBrowse);
-        uploadButton.addActionListener(this::onUpload);
+        progressBar = new JProgressBar();
+        progressBar.setIndeterminate(true);
+        progressBar.setVisible(false);
+
+        uploadButton = new JButton("Upload & Analyze");
+        uploadButton.setBackground(UITheme.PRIMARY_COLOR);
+        uploadButton.setForeground(Color.WHITE);
+        uploadButton.setFont(UITheme.HEADER_FONT);
+        uploadButton.addActionListener(e -> handleUpload());
+
+        add(title);
+        add(Box.createVerticalStrut(15));
+        add(new JLabel("CV Title"));
+        add(titleField);
+        add(Box.createVerticalStrut(10));
+        add(new JLabel("Applying For"));
+        add(jobTitleBox);
+        add(Box.createVerticalStrut(10));
+        add(new JLabel("Notes (Optional)"));
+        add(new JScrollPane(descriptionArea));
+        add(Box.createVerticalStrut(15));
+        add(fileLabel);
+        add(browseButton);
+        add(Box.createVerticalStrut(20));
+        add(progressBar);
+        add(uploadButton);
     }
 
-    private void onBrowse(ActionEvent e) {
+    private JTextField createTextField() {
+        JTextField f = new JTextField();
+        f.setMaximumSize(new Dimension(Integer.MAX_VALUE, 40));
+        f.setBorder(new LineBorder(Color.LIGHT_GRAY, 1));
+        return f;
+    }
+
+    private void selectFile() {
         JFileChooser chooser = new JFileChooser();
-        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Files", "pdf"));
-        int result = chooser.showOpenDialog(this);
-        if (result == JFileChooser.APPROVE_OPTION) {
+        chooser.setFileFilter(new javax.swing.filechooser.FileNameExtensionFilter("PDF Documents", "pdf"));
+        if (chooser.showOpenDialog(this) == JFileChooser.APPROVE_OPTION) {
             selectedFile = chooser.getSelectedFile();
-            fileField.setText(selectedFile.getName());
-            uploadButton.setEnabled(selectedFile.getName().toLowerCase().endsWith(".pdf"));
-            feedbackLabel.setText(" ");
+            fileLabel.setText("Selected: " + selectedFile.getName());
         }
     }
 
-    private void onUpload(ActionEvent e) {
-        if (selectedFile == null || !selectedFile.getName().toLowerCase().endsWith(".pdf")) {
-            feedbackLabel.setText("Please select a valid PDF file.");
-            feedbackLabel.setForeground(Color.RED);
-            return;
-        }
+    private void handleUpload() {
         String title = titleField.getText().trim();
-        String desc = descriptionArea.getText().trim();
-        if (title.isEmpty()) {
-            feedbackLabel.setText("Title is required.");
-            feedbackLabel.setForeground(Color.RED);
-            return;
-        }
         String jobTitle = (String) jobTitleBox.getSelectedItem();
-        if (jobTitle == null || jobTitle.trim().isEmpty()) {
-            feedbackLabel.setText("Please select a job title.");
-            feedbackLabel.setForeground(Color.RED);
+        
+        if (title.isEmpty() || selectedFile == null) {
+            JOptionPane.showMessageDialog(this, "Title and File are required.", "Validation Error", JOptionPane.ERROR_MESSAGE);
             return;
         }
-        if (user == null) {
-            feedbackLabel.setText("User not found. Please re-login.");
-            feedbackLabel.setForeground(Color.RED);
-            return;
-        }
-        feedbackLabel.setText("Uploading...");
-        feedbackLabel.setForeground(new Color(60, 120, 60));
-        SwingUtilities.invokeLater(() -> {
-            Submission submission = CVManager.uploadCV(selectedFile, user, title, desc, jobTitle);
-            if (submission != null) {
-                feedbackLabel.setText("CV uploaded successfully!");
-                feedbackLabel.setForeground(new Color(0, 153, 51));
-                fileField.setText("");
-                titleField.setText("");
-                descriptionArea.setText("");
-                selectedFile = null;
-                uploadButton.setEnabled(false);
-                // Show match result dialog
-                java.util.Map<String, Object> result = com.cvreviewapp.utils.CVManager.checkCV(submission.getFilePath(), jobTitle);
-                StringBuilder msg = new StringBuilder();
-                if (result.containsKey("error")) {
-                    msg.append(result.get("error"));
-                } else {
-                    msg.append("Job Title: ").append(result.get("jobTitle")).append("\n");
-                    msg.append("\nMissing Skills: ").append(result.get("missingSkills")).append("\n");
-                    msg.append("Qualification Present: ").append(result.get("hasQualification")).append("\n");
-                    msg.append("Experience Present: ").append(result.get("hasExperience")).append("\n");
-                }
-                javax.swing.JButton backBtn = new javax.swing.JButton("Back to Home");
-                backBtn.addActionListener(ev -> {
-                    new HomePage();
-                    javax.swing.SwingUtilities.getWindowAncestor(CVUploadPanel.this).dispose();
-                });
-                javax.swing.JPanel panel = new javax.swing.JPanel();
-                panel.setLayout(new java.awt.BorderLayout());
-                panel.add(new javax.swing.JScrollPane(new javax.swing.JTextArea(msg.toString())), java.awt.BorderLayout.CENTER);
-                panel.add(backBtn, java.awt.BorderLayout.SOUTH);
-                javax.swing.JOptionPane.showMessageDialog(CVUploadPanel.this, panel, "CV Match Result", javax.swing.JOptionPane.INFORMATION_MESSAGE);
-            } else {
-                feedbackLabel.setText("Upload failed. Please try again.");
-                feedbackLabel.setForeground(Color.RED);
+
+        setLoading(true);
+        SwingWorker<Submission, Void> worker = new SwingWorker<>() {
+            @Override
+            protected Submission doInBackground() throws Exception {
+                return submissionService.submitCV(user, selectedFile, title, descriptionArea.getText(), jobTitle);
             }
-        });
+
+            @Override
+            protected void done() {
+                try {
+                    Submission s = get();
+                    if (s != null) {
+                        CVManager.logAction(user.id(), "CV_UPLOAD", "Uploaded CV: " + title);
+                        showAnalysisResult(s, jobTitle);
+                        clearForm();
+                    }
+                } catch (Exception e) {
+                    LOGGER.severe("Upload failed: " + e.getMessage());
+                    JOptionPane.showMessageDialog(CVUploadPanel.this, "Upload failed: " + e.getMessage(), "Error", JOptionPane.ERROR_MESSAGE);
+                } finally {
+                    setLoading(false);
+                }
+            }
+        };
+        worker.execute();
     }
-} 
+
+    private void showAnalysisResult(Submission s, String jobTitle) {
+        var result = CVManager.checkCV(s.filePath(), jobTitle);
+        StringBuilder msg = new StringBuilder("Analysis for ").append(jobTitle).append(":\n\n");
+        if (result.containsKey("error")) {
+            msg.append("Error: ").append(result.get("error"));
+        } else {
+            msg.append("Missing Skills: ").append(result.get("missingSkills")).append("\n");
+            msg.append("Qualification Match: ").append(((boolean)result.get("hasQualification") ? "Yes" : "No")).append("\n");
+            msg.append("Experience Match: ").append(((boolean)result.get("hasExperience") ? "Yes" : "No")).append("\n");
+        }
+        JOptionPane.showMessageDialog(this, msg.toString(), "CV Analysis Complete", JOptionPane.INFORMATION_MESSAGE);
+    }
+
+    private void setLoading(boolean loading) {
+        progressBar.setVisible(loading);
+        uploadButton.setEnabled(!loading);
+    }
+
+    private void clearForm() {
+        titleField.setText("");
+        descriptionArea.setText("");
+        selectedFile = null;
+        fileLabel.setText("No file selected");
+    }
+}

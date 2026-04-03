@@ -5,3 +5,4 @@ uploads/
 *.log
 config.properties
 dependency-reduced-pom.xml
+src/main/resources/application.properties

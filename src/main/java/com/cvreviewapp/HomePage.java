@@ -1,129 +1,107 @@
 package com.cvreviewapp;
 
-import java.awt.Color;
-import java.awt.Component;
-import java.awt.Cursor;
-import java.awt.Dimension;
-import java.awt.Font;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
-import java.awt.GridBagConstraints;
-import java.awt.GridBagLayout;
-import java.awt.Image;
-
-import javax.swing.Box;
-import javax.swing.BoxLayout;
-import javax.swing.ImageIcon;
-import javax.swing.JButton;
-import javax.swing.JFrame;
-import javax.swing.JLabel;
-import javax.swing.JPanel;
-import javax.swing.SwingConstants;
-import javax.swing.border.EmptyBorder;
+import com.cvreviewapp.utils.Constants;
+import com.cvreviewapp.utils.UITheme;
+import java.awt.*;
+import javax.swing.*;
 import javax.swing.border.LineBorder;
 
-import com.cvreviewapp.utils.BackgroundPanel;
-
+/**
+ * Production-ready Home Page with professional branding and intuitive navigation.
+ * 
+ * Developed by: azihad
+ * Contact: azihad783@gmail.com
+ * GitHub: AZtheE1
+ */
 public class HomePage extends JFrame {
+
     public HomePage() {
-        setTitle("Welcome to CV Management App");
+        initUI();
+    }
+
+    private void initUI() {
+        setTitle(Constants.app.name + " - Welcome");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setExtendedState(JFrame.MAXIMIZED_BOTH);
-        setUndecorated(false);
+        setSize(800, 600);
         setLocationRelativeTo(null);
+        setExtendedState(JFrame.MAXIMIZED_BOTH);
 
-        BackgroundPanel bgPanel = new BackgroundPanel();
-        bgPanel.setLayout(new GridBagLayout());
+        JPanel mainPanel = new JPanel(new GridBagLayout());
+        mainPanel.setBackground(UITheme.PRIMARY_COLOR);
 
-        JPanel card = new JPanel() {
-            @Override
-            protected void paintComponent(Graphics g) {
-                super.paintComponent(g);
-                Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(new Color(0,0,0,30));
-                g2.fillRoundRect(8, 8, getWidth()-16, getHeight()-16, 32, 32);
-                g2.dispose();
-            }
-        };
-        card.setOpaque(false);
-        card.setBorder(new LineBorder(new Color(180,180,180,180), 2, true));
+        JPanel card = new JPanel();
         card.setLayout(new BoxLayout(card, BoxLayout.Y_AXIS));
-        card.setBackground(new Color(255, 255, 255, 220));
-        card.setAlignmentX(Component.CENTER_ALIGNMENT);
-        card.setAlignmentY(Component.CENTER_ALIGNMENT);
-        card.setMaximumSize(new Dimension(520, 420));
-        card.setMinimumSize(new Dimension(420, 340));
+        card.setBackground(Color.WHITE);
+        card.setPreferredSize(new Dimension(500, 450));
+        card.setMaximumSize(new Dimension(500, 450));
+        card.setBorder(BorderFactory.createCompoundBorder(
+            new LineBorder(new Color(0, 0, 0, 50), 1),
+            BorderFactory.createEmptyBorder(40, 40, 40, 40)
+        ));
 
-        // Logo
-        JLabel logo = new JLabel();
-        logo.setAlignmentX(Component.CENTER_ALIGNMENT);
-        try {
-            java.net.URL bgUrl = getClass().getResource("/com/cvreviewapp/background.jpg");
-            if (bgUrl != null) {
-                ImageIcon icon = new ImageIcon(bgUrl);
-                Image img = icon.getImage().getScaledInstance(80, 80, Image.SCALE_SMOOTH);
-                logo.setIcon(new ImageIcon(img));
-            } else {
-                System.err.println("[HomePage] Resource not found: /com/cvreviewapp/background.jpg");
-            }
-        } catch (Exception ex) {}
-        logo.setBorder(new EmptyBorder(24, 0, 0, 0));
+        JLabel logoLabel = new JLabel(Constants.app.name);
+        logoLabel.setFont(UITheme.TITLE_FONT);
+        logoLabel.setForeground(UITheme.PRIMARY_COLOR);
+        logoLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel title = new JLabel("Welcome to CV Management App");
-        title.setFont(new Font("Arial", Font.BOLD, 36));
-        title.setAlignmentX(Component.CENTER_ALIGNMENT);
-        title.setBorder(new EmptyBorder(24, 0, 24, 0));
-        title.setForeground(new Color(30, 30, 30));
-        title.setHorizontalAlignment(SwingConstants.CENTER);
+        JLabel sloganLabel = new JLabel("Streamlined Recruitment & CV Analysis");
+        sloganLabel.setFont(UITheme.REGULAR_FONT);
+        sloganLabel.setForeground(Color.GRAY);
+        sloganLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JButton loginButton = new JButton("Login");
-        JButton registerButton = new JButton("Register");
-        loginButton.setFont(new Font("Arial", Font.BOLD, 22));
-        registerButton.setFont(new Font("Arial", Font.BOLD, 22));
-        loginButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        registerButton.setAlignmentX(Component.CENTER_ALIGNMENT);
-        loginButton.setMaximumSize(new Dimension(220, 60));
-        registerButton.setMaximumSize(new Dimension(220, 60));
-        loginButton.setPreferredSize(new Dimension(220, 60));
-        registerButton.setPreferredSize(new Dimension(220, 60));
-        loginButton.setFocusPainted(false);
-        registerButton.setFocusPainted(false);
-        loginButton.setBackground(new Color(0, 120, 215));
-        loginButton.setForeground(Color.WHITE);
-        registerButton.setBackground(new Color(0, 153, 51));
-        registerButton.setForeground(Color.WHITE);
-        loginButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        registerButton.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        loginButton.setToolTipText("Sign in to your account");
-        registerButton.setToolTipText("Create a new account");
+        JButton loginBtn = createPrimaryButton("Access My Account");
+        loginBtn.addActionListener(e -> {
+            new LoginUI();
+            dispose();
+        });
 
-        card.add(logo);
-        card.add(title);
-        card.add(Box.createVerticalStrut(40));
-        card.add(loginButton);
+        JButton registerBtn = createSecondaryButton("Register New User");
+        registerBtn.addActionListener(e -> {
+            new RegistrationUI();
+            dispose();
+        });
+
+        card.add(Box.createVerticalGlue());
+        card.add(logoLabel);
+        card.add(Box.createVerticalStrut(10));
+        card.add(sloganLabel);
+        card.add(Box.createVerticalGlue());
+        card.add(loginBtn);
         card.add(Box.createVerticalStrut(20));
-        card.add(registerButton);
-        card.add(Box.createVerticalStrut(40));
+        card.add(registerBtn);
+        card.add(Box.createVerticalGlue());
 
-        GridBagConstraints gbc = new GridBagConstraints();
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        gbc.anchor = GridBagConstraints.CENTER;
-        bgPanel.add(card, gbc);
-
-        setContentPane(bgPanel);
-
-        loginButton.addActionListener(e -> {
-            LoginUI login = new LoginUI();
-            login.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            dispose();
-        });
-        registerButton.addActionListener(e -> {
-            RegistrationUI reg = new RegistrationUI();
-            reg.setExtendedState(JFrame.MAXIMIZED_BOTH);
-            dispose();
-        });
-
+        mainPanel.add(card);
+        add(mainPanel);
         setVisible(true);
     }
-} 
+
+    private JButton createPrimaryButton(String text) {
+        JButton b = new JButton(text);
+        b.setFont(UITheme.HEADER_FONT);
+        b.setBackground(UITheme.PRIMARY_COLOR);
+        b.setForeground(Color.WHITE);
+        b.setMaximumSize(new Dimension(400, 55));
+        b.setAlignmentX(Component.CENTER_ALIGNMENT);
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return b;
+    }
+
+    private JButton createSecondaryButton(String text) {
+        JButton b = new JButton(text);
+        b.setFont(UITheme.HEADER_FONT);
+        b.setBackground(Color.WHITE);
+        b.setForeground(UITheme.PRIMARY_COLOR);
+        b.setBorder(new LineBorder(UITheme.PRIMARY_COLOR, 2));
+        b.setMaximumSize(new Dimension(400, 55));
+        b.setAlignmentX(Component.CENTER_ALIGNMENT);
+        b.setFocusPainted(false);
+        b.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+        return b;
+    }
+
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(HomePage::new);
+    }
+}

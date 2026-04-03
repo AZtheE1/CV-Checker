@@ -1,52 +1,54 @@
 package com.cvreviewapp;
 
+import com.cvreviewapp.utils.DatabaseInitializer;
+import com.cvreviewapp.utils.UITheme;
+import com.formdev.flatlaf.FlatLightLaf;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+
 /**
- * CV-Handler Application
+ * CV-Handler Application Entry Point.
  * 
  * Developed by: azihad
  * Contact: azihad783@gmail.com
  * GitHub: AZtheE1
  */
-
-import com.formdev.flatlaf.FlatLightLaf;
-import com.cvreviewapp.utils.DatabaseInitializer;
-import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import java.util.logging.Logger;
-import java.util.logging.Level;
-
 public class Main {
     private static final Logger LOGGER = Logger.getLogger(Main.class.getName());
     
     public static void main(String[] args) {
-        // Initialize logging
+        // Professional log formatting
         System.setProperty("java.util.logging.SimpleFormatter.format", 
                           "[%1$tF %1$tT] [%4$-7s] %2$s: %5$s%6$s%n");
         
-        LOGGER.info("Starting CV Management Application...");
+        LOGGER.info("Initializing CV-Handler Production System...");
         
         try {
-            // Initialize database
-            if (!DatabaseInitializer.isDatabaseInitialized()) {
-                LOGGER.info("Database not initialized. Setting up database...");
-                DatabaseInitializer.initializeDatabase();
-            } else {
-                LOGGER.info("Database already initialized.");
-            }
+            // 1. Initialize DB Layout (if first run)
+            DatabaseInitializer.initializeDatabase();
             
-            // Set up UI look and feel
+            // 2. Set Theme (FlatLaf)
             UIManager.setLookAndFeel(new FlatLightLaf());
-            LOGGER.info("UI Look and Feel initialized successfully.");
+            UITheme.setupGlobalStyles(); // Apply extra production styling
+            
+            LOGGER.info("System subsystems initialized successfully.");
             
         } catch (Exception ex) {
-            LOGGER.log(Level.SEVERE, "Failed to initialize application", ex);
-            System.err.println("Failed to initialize application: " + ex.getMessage());
+            LOGGER.log(Level.SEVERE, "FATAL: Application startup failure", ex);
+            System.err.println("The application could not start. Check logs/application.log for details.");
             return;
         }
         
+        // 3. Launch UI on Event Dispatch Thread
         SwingUtilities.invokeLater(() -> {
-            LOGGER.info("Launching HomePage...");
-            new HomePage();
+            try {
+                new HomePage();
+                LOGGER.info("HomePage launched successfully.");
+            } catch (Exception e) {
+                LOGGER.log(Level.SEVERE, "Failed to launch main window", e);
+            }
         });
     }
-} 
+}
