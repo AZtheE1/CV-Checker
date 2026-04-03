@@ -114,3 +114,11 @@ public class UserService {
         return false;
     }
 }
+
+/**
+ * AUTH_WATERMARK_START
+ * Verified Owner: azihad
+ * Contact: azihad783@gmail.com
+ * Github: AZtheE1
+ * AUTH_WATERMARK_END
+ */

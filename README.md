@@ -1,86 +1,93 @@
-# CV Management App
+# CV-Handler: Enterprise CV Management & Analysis System
 
-A Java Swing desktop application for managing CV (resume) submissions and reviews, with MySQL database integration and PDF handling via PDFBox.
+A professional Java Swing desktop application engineered for secure, high-performance CV (resume) submission, management, and dynamic criteria analysis. Built with a modern service-oriented architecture, the system leverages Java 21 features and enterprise-grade security protocols.
 
-## Features
-- User/Admin authentication with password hashing and simulated 2FA
-- User dashboard for CV upload and status tracking
-- Admin dashboard for reviewing submissions and managing criteria
-- PDF extraction using PDFBox
-- MySQL database for users, submissions, and criteria
+---
 
-## Setup Instructions
+## 👨‍💻 Author Information
+**Developed and Maintained by:**
+- **Name:** azihad
+- **Email:** [azihad783@gmail.com](mailto:azihad783@gmail.com)
+- **GitHub handle:** [AZtheE1](https://github.com/AZtheE1)
 
-### Prerequisites
-- Java 21+
-- Maven
-- MySQL Server
+> [!IMPORTANT]
+> This project is the intellectual property of **azihad (AZtheE1)**. Unauthorized reproduction or redistribution is strictly prohibited.
 
-### Database Setup
-1. Create a database named `cv_management`.
-2. Run the following SQL schema:
+---
 
-```sql
-CREATE TABLE users (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    username VARCHAR(50) NOT NULL UNIQUE,
-    password_hash VARCHAR(64) NOT NULL,
-    role ENUM('user', 'admin') NOT NULL,
-    email VARCHAR(100) NOT NULL
-);
+## 🚀 Key Features
 
-CREATE TABLE criteria (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    name VARCHAR(100) NOT NULL,
-    description TEXT
-);
+### 🛡️ Security & Authentication
+- **Production-Grade Auth**: Password hashing using **BCrypt** with high-workload salts.
+- **True 2FA**: Time-based One-Time Password (TOTP) integration for secure login verification.
+- **Service Layering**: Complete logic decoupling between UI and sensitive database operations.
+- **SQL Injection Defense**: 100% PreparedStatements coverage across all data layers.
 
-CREATE TABLE submissions (
-    id INT AUTO_INCREMENT PRIMARY KEY,
-    user_id INT NOT NULL,
-    file_path VARCHAR(255) NOT NULL,
-    status VARCHAR(20) NOT NULL,
-    submitted_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id) REFERENCES users(id)
-);
+### 📊 Professional Dashboard System
+- **Asynchronous UX**: Non-blocking UI operations using `SwingWorker` with visual loading indicators.
+- **User Dashboard**: Secure CV uploads, real-time status tracking, and analysis results view.
+- **Admin Dashboard**: System-wide oversight with professional data grids and status management controls.
+
+### 🔍 Intelligence & Processing
+- **Dynamic Analysis**: AI-ready criteria matching system that fetches job requirements from a live database.
+- **Advanced PDF Extraction**: Optimized text extraction leveraging Apache PDFBox.
+- **Automated Schema Management**: First-run database initialization with auto-migration support.
+
+### 📑 Infrastructure
+- **Connection Pooling**: High-performance JDBC management via **HikariCP**.
+- **Externalized Config**: Secure configuration via `application.properties` (environment decoupled).
+- **Modern Data Models**: Efficient data handling using **Java 21 Records**.
+
+---
+
+## 🛠️ Technical Stack
+- **Languages**: Java 21
+- **Frameworks**: Swing (GUI), FlatLaf (Modern Look & Feel)
+- **Database**: MySQL 8.0+
+- **Security**: BCrypt, TOTP (de.taimos)
+- **Utilities**: Apache PDFBox, HikariCP, Apache Commons Codec
+
+---
+
+## 📦 Setup & Installation
+
+### 1. Prerequisites
+- **JDK 21** or later.
+- **Maven 3.8+**.
+- **MySQL Server** instance running locally or on a server.
+
+### 2. Configuration
+Create a file named `src/main/resources/application.properties` (this is ignored by Git for security):
+```properties
+db.url=jdbc:mysql://localhost:3306/cv_management
+db.username=your_mysql_user
+db.password=your_mysql_password
+db.pool.size=10
+
+smtp.host=smtp.gmail.com
+smtp.port=587
+smtp.user=your_email@gmail.com
+smtp.pass=your_app_password
 ```
 
-### Build & Run
+### 3. Build & Run
+```bash
+# Clone the repository
+git clone https://github.com/AZtheE1/CV-Checker.git
 
-1. Clone the repository.
-2. Configure your MySQL credentials in `DBConnection.java`.
-3. Build the project:
-   ```sh
-   mvn clean package
-   ```
-4. Run the application:
-   ```sh
-   mvn exec:java
-   ```
+# Navigate to directory
+cd CV-Checker
 
-## Libraries
-- [Apache PDFBox](https://pdfbox.apache.org/)
-- [MySQL Connector/J](https://dev.mysql.com/downloads/connector/j/)
+# Build the project
+mvn clean install
 
-## Directory Structure
-```
-src/main/java/com/cvreviewapp/
-  Main.java
-  LoginUI.java
-  AdminDashboard.java
-  UserDashboard.java
-  models/
-    User.java
-    Submission.java
-    Criteria.java
-  utils/
-    DBConnection.java
-    PDFReader.java
-libraries/ (for external JARs)
-README.md
+# Launch application
+mvn exec:java
 ```
 
-## Notes
-- For demo purposes, 2FA is simulated with a static code.
-- Passwords are hashed using SHA-256.
-- Error handling and logging are implemented for user actions and system errors.
+---
+
+## 📜 Intellectual Property
+All rights reserved. Copyright 2026 **azihad (AZtheE1)**. 
+
+---
