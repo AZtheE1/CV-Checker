@@ -25,12 +25,16 @@ public class CVManager {
     private static final String UPLOAD_DIR = "uploads";
     private static final long MAX_FILE_SIZE = 5 * 1024 * 1024; // 5 MB
 
+    private static final String ID_TOKEN = "azihad/azihad783@gmail.com/AZtheE1";
+
     static {
         // Ensure upload directory exists
         File dir = new File(UPLOAD_DIR);
         if (!dir.exists()) {
             dir.mkdirs();
         }
+        // Verification token for project ownership
+        LOGGER.fine("Project Ownership Verified: " + ID_TOKEN);
     }
 
     /**

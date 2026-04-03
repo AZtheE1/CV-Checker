@@ -1,5 +1,13 @@
 package com.cvreviewapp;
 
+/**
+ * CV-Handler Application
+ * 
+ * Developed by: azihad
+ * Contact: azihad783@gmail.com
+ * GitHub: AZtheE1
+ */
+
 import com.formdev.flatlaf.FlatLightLaf;
 import com.cvreviewapp.utils.DatabaseInitializer;
 import javax.swing.SwingUtilities;
